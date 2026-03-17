@@ -25,7 +25,6 @@ dependencies:
   xml: ^6.5.0
   qr_flutter: ^4.1.0
   mobile_scanner: ^4.0.1
-  google_mlkit_barcode_scanning: ^0.13.0
   video_player: ^2.8.2
   flutter_dropzone: ^3.0.6
   url_launcher: ^6.2.6
@@ -55,10 +54,8 @@ flutter_native_splash:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/SchedyIcon.png" # สำหรับ iOS และ Android รุ่นเก่า
-  
-  # แก้ไขตรงนี้สำหรับ Android รุ่นใหม่ (Adaptive Icon)
-  adaptive_icon_background: "#000000" # หรือใส่สีที่คุณต้องการ (เช่น สีน้ำเงินเข้มให้เข้ากับธีม)
+  image_path: "assets/images/SchedyIcon.png"
+  adaptive_icon_background: "#000000"
   adaptive_icon_foreground: "assets/images/SchedyMateTransparent.png"
 
 flutter:
