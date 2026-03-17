@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1050151510536",
+    "project_id": "schedymate",
+    "storage_bucket": "schedymate.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1050151510536:android:45ff6ae6fb3542c278e7bd",
+        "android_client_info": {
+          "package_name": "com.example.schedymate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwtLPYEp5IOsMnvW7MUk9fKRtSVWsMZ2k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

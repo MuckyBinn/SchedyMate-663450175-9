@@ -1,0 +1,260 @@
+﻿ 470:             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+ 471:             child: Row(children: [
+ 472:               // โ”€โ”€ เธฃเธนเธเธ•เธฑเธงเน€เธญเธเธเธฒเธ Firestore โ€” FutureBuilder เน€เธเธทเนเธญเนเธซเนเนเธเนเนเธ
+ 473:               _buildMyAvatar(radius: 18),
+ 474:               const SizedBox(width: 10),
+ 475:               Expanded(child: Container(
+ 476:                 height: 34,
+ 477:                 alignment: Alignment.centerLeft,
+ 478:                 padding: const EdgeInsets.symmetric(horizontal: 14),
+ 479:                 decoration: BoxDecoration(
+ 480:                   color: _bg,
+ 481:                   borderRadius: BorderRadius.circular(24),
+ 482:                 ),
+ 483:                 child: const Text("What's on your mind?",
+ 484:                     style: TextStyle(fontSize: 13, color: _sublabel)),
+ 485:               )),
+ 486:             ]),
+ 487:           ),
+ 488:         ),
+ 489:       ),
+ 490:     );
+ 491:   }
+ 492: 
+ 493:   // โ”€โ”€ My avatar widget (เธ”เธถเธเธเธฒเธ Firestore realtime) โ”€โ”€โ”€โ”€โ”€
+ 494:   Widget _buildMyAvatar({double radius = 20}) {
+ 495:     final uid = FirebaseAuth.instance.currentUser?.uid ?? "";
+ 496:     return FutureBuilder<DocumentSnapshot>(
+ 497:       future: FirebaseFirestore.instance
+ 498:           .collection("users").doc(uid).get(),
+ 499:       builder: (_, snap) {
+ 500:         String url = defaultAvatar;
+ 501:         if (snap.hasData && snap.data!.exists) {
+ 502:           final img = (snap.data!.data()
+ 503:           as Map<String, dynamic>)["imgUrl"] ?? "";
+ 504:           if (img.isNotEmpty && img.startsWith("http")) url = img;
+ 505:         }
+ 506:         return CircleAvatar(
+ 507:             radius: radius,
+ 508:             backgroundImage: NetworkImage(url));
+ 509:       },
+ 510:     );
+ 511:   }
+ 512: 
+ 513:   // โ”€โ”€ Post card โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
+ 514:   Widget _buildPostCard(DocumentSnapshot doc, String myUid) {
+ 515:     final data    = doc.data() as Map<String, dynamic>;
+ 516:     final userId  = data["userId"]  ?? "";
+ 517:     final text    = data["text"]    ?? "";
+ 518:     final imgUrls = List<String>.from(data["imgUrls"] ?? []);
+ 519:     if (imgUrls.isEmpty && data["imgUrl"] != null &&
+ 520:         (data["imgUrl"] as String).isNotEmpty) {
+ 521:       imgUrls.add(data["imgUrl"] as String);
+ 522:     }
+ 523:     final likes   = List<String>.from(data["likes"] ?? []);
+ 524:     final ts      = (data["createdAt"] as Timestamp?)?.toDate();
+ 525:     final timeStr = ts != null ? _timeAgo(ts) : "";
+ 526:     final liked   = likes.contains(myUid);
+ 527: 
+ 528:     return FutureBuilder<DocumentSnapshot>(
+ 529:       future: FirebaseFirestore.instance
+ 530:           .collection("users").doc(userId).get(),
+ 531:       builder: (_, userSnap) {
+ 532:         String uname  = "User";
+ 533:         String avatar = defaultAvatar;
+ 534:         if (userSnap.hasData && userSnap.data!.exists) {
+ 535:           final ud = userSnap.data!.data() as Map<String, dynamic>;
+ 536:           uname  = ud["username"] ?? "User";
+ 537:           final img = ud["imgUrl"] ?? "";
+ 538:           if (img.isNotEmpty && img.startsWith("http")) avatar = img;
+ 539:         }
+ 540: 
+ 541:         return Material(
+ 542:           color: Colors.transparent,
+ 543:           child: InkWell(
+ 544:             borderRadius: BorderRadius.circular(20),
+ 545:             onTap: () => _showPostPopup(
+ 546:                 doc: doc,
+ 547:                 myUid: myUid,
+ 548:                 uname: uname,
+ 549:                 avatar: avatar,
+ 550:                 timeStr: timeStr,
+ 551:                 text: text,
+ 552:                 imgUrls: imgUrls,
+ 553:                 likes: likes,
+ 554:                 liked: liked),
+ 555:             child: Container(
+ 556:               margin: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+ 557:               decoration: BoxDecoration(
+ 558:                 color: _card,
+ 559:                 borderRadius: BorderRadius.circular(20),
+ 560:                 boxShadow: [BoxShadow(
+ 561:                     color: Colors.black.withOpacity(0.05),
+ 562:                     blurRadius: 10, offset: const Offset(0, 2))],
+ 563:               ),
+ 564:               child: Column(
+ 565:                   crossAxisAlignment: CrossAxisAlignment.start,
+ 566:                   children: [
+ 567: 
+ 568:                   // Header
+ 569:                   Padding(
+ 570:                     padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
+ 571:                     child: Row(children: [
+ 572:                       CircleAvatar(radius: 20,
+ 573:                           backgroundImage: NetworkImage(avatar)),
+ 574:                       const SizedBox(width: 10),
+ 575:                       Expanded(child: Column(
+ 576:                           crossAxisAlignment: CrossAxisAlignment.start,
+ 577:                           children: [
+ 578:                             Text(uname, style: const TextStyle(
+ 579:                                 fontSize: 14, fontWeight: FontWeight.w700,
+ 580:                                 color: _label)),
+ 581:                             Text(timeStr, style: const TextStyle(
+ 582:                                 fontSize: 11, color: _sublabel)),
+ 583:                           ])),
+ 584:                       if (userId == myUid)
+ 585:                         GestureDetector(
+ 586:                           onTap: () => _showPostOptions(doc, text),
+ 587:                           child: Container(width: 32, height: 32,
+ 588:                               decoration: BoxDecoration(
+ 589:                                   color: _bg,
+ 590:                                   borderRadius: BorderRadius.circular(8)),
+ 591:                               child: const Icon(Icons.more_horiz_rounded,
+ 592:                                   size: 18, color: _sublabel)),
+ 593:                         ),
+ 594:                     ]),
+ 595:                   ),
+ 596: 
+ 597:                   if (text.isNotEmpty)
+ 598:                     Padding(
+ 599:                       padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+ 600:                       child: Text(text,
+ 601:                           maxLines: 3,
+ 602:                           overflow: TextOverflow.ellipsis,
+ 603:                           style: const TextStyle(
+ 604:                               fontSize: 14, color: _label, height: 1.55)),
+ 605:                     ),
+ 606: 
+ 607:                   if (imgUrls.isNotEmpty) ...[
+ 608:                     const SizedBox(height: 10),
+ 609:                     _buildImageGrid(imgUrls, onTap: () => _showPostPopup(
+ 610:                         doc: doc,
+ 611:                         myUid: myUid,
+ 612:                         uname: uname,
+ 613:                         avatar: avatar,
+ 614:                         timeStr: timeStr,
+ 615:                         text: text,
+ 616:                         imgUrls: imgUrls,
+ 617:                         likes: likes,
+ 618:                         liked: liked)),
+ 619:                   ],
+ 620: 
+ 621:                   // Actions
+ 622:                   Padding(
+ 623:                     padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+ 624:                     child: Column(children: [
+ 625:                       Container(height: 0.5, color: _separator),
+ 626:                       const SizedBox(height: 10),
+ 627:                       Row(children: [
+ 628:                         GestureDetector(
+ 629:                           onTap: () async {
+ 630:                             HapticFeedback.lightImpact();
+ 631:                             final nl = List<String>.from(likes);
+ 632:                             liked ? nl.remove(myUid) : nl.add(myUid);
+ 633:                             await doc.reference.update({"likes": nl});
+ 634:                             // notify post owner
+ 635:                             if (!liked) {
+ 636:                               await NotificationService.send(
+ 637:                                 toUid: userId,
+ 638:                                 type: "like",
+ 639:                                 postId: doc.id,
+ 640:                                 postPreview: text.isNotEmpty ? text : null,
+ 641:                               );
+ 642:                             }
+ 643:                           },
+ 644:                           child: Row(children: [
+ 645:                             Icon(liked
+ 646:                                 ? Icons.favorite_rounded
+ 647:                                 : Icons.favorite_border_rounded,
+ 648:                                 size: 20,
+ 649:                                 color: liked ? primaryPink : _sublabel),
+ 650:                             const SizedBox(width: 5),
+ 651:                             Text("${likes.length}",
+ 652:                                 style: TextStyle(fontSize: 13,
+ 653:                                     color: liked ? primaryPink : _sublabel,
+ 654:                                     fontWeight: FontWeight.w600)),
+ 655:                           ]),
+ 656:                         ),
+ 657:                         const SizedBox(width: 24),
+ 658:                         GestureDetector(
+ 659:                           onTap: () => _showComments(doc),
+ 660:                           child: Row(children: [
+ 661:                             const Icon(Icons.chat_bubble_outline_rounded,
+ 662:                                 size: 19, color: _sublabel),
+ 663:                             const SizedBox(width: 5),
+ 664:                             StreamBuilder<QuerySnapshot>(
+ 665:                               stream: doc.reference
+ 666:                                   .collection("comments").snapshots(),
+ 667:                               builder: (_, cs) {
+ 668:                                 final c = cs.data?.docs.length ?? 0;
+ 669:                                 return Text("$c",
+ 670:                                     style: const TextStyle(
+ 671:                                         fontSize: 13, color: _sublabel,
+ 672:                                         fontWeight: FontWeight.w600));
+ 673:                               },
+ 674:                             ),
+ 675:                           ]),
+ 676:                         ),
+ 677:                       ]),
+ 678:                     ]),
+ 679:                   ),
+ 680:                 ]),
+ 681:           ),
+ 682:         );
+ 683:       },
+ 684:     );
+ 685:   }
+ 686: 
+ 687: // โ”€โ”€ Image grid โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
+ 688:   Widget _buildImageGrid(List<String> urls, {VoidCallback? onTap}) {
+ 689:     Widget wrap(Widget child) => GestureDetector(
+ 690:         onTap: onTap, child: child);
+ 691: 
+ 692:     if (urls.length == 1) {
+ 693:       return wrap(ClipRRect(
+ 694:         borderRadius: BorderRadius.circular(16),
+ 695:         child: ConstrainedBox(
+ 696:           constraints: const BoxConstraints(maxHeight: 320),
+ 697:           child: Image.network(urls[0],
+ 698:               width: double.infinity, fit: BoxFit.cover),
+ 699:         ),
+ 700:       ));
+ 701:     }
+ 702:     if (urls.length == 2) {
+ 703:       return wrap(ClipRRect(
+ 704:         borderRadius: BorderRadius.circular(16),
+ 705:         child: SizedBox(
+ 706:           height: 200,
+ 707:           child: Row(children: urls.map((u) => Expanded(
+ 708:             child: Padding(
+ 709:               padding: const EdgeInsets.symmetric(horizontal: 1),
+ 710:               child: ClipRRect(
+ 711:                 borderRadius: BorderRadius.circular(12),
+ 712:                 child: Image.network(u, fit: BoxFit.cover,
+ 713:                     height: double.infinity),
+ 714:               ),
+ 715:             ),
+ 716:           )).toList()),
+ 717:         ),
+ 718:       ));
+ 719:     }
+ 720:     return wrap(ClipRRect(
+ 721:       borderRadius: BorderRadius.circular(16),
+ 722:       child: SizedBox(
+ 723:         height: 200,
+ 724:         child: Row(children: [
+ 725:           Expanded(child: ClipRRect(
+ 726:             borderRadius: BorderRadius.circular(12),
+ 727:             child: Image.network(urls[0],
+ 728:                 fit: BoxFit.cover, height: double.infinity),
+ 729:           )),
